@@ -7,9 +7,13 @@ venv/
 # Poetry
 poetry.lock
 
+# If you use VSCode 
+.vscode/
+
 # Node
 node_modules/
 build/
+dist/
 .env.local
 
 # OS
