@@ -1,4 +1,8 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# Redis 
+*.rdb
+dump.rdb
+redis-data/
 
 # dependencies
 /node_modules

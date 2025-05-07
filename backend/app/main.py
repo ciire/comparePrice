@@ -4,6 +4,8 @@ import os
 from flask_cors import CORS
 import redis
 from datetime import timedelta
+
+import redis.exceptions
 from lambda_layer.rainforest_api import search_amazon_products
 app = Flask(__name__)
 # Allow CORS from frontend dev server
@@ -26,16 +28,21 @@ def api_search():
     search_term = request.args.get("search")
     if not search_term:
         return {"error": "Missing search term"}, 400
+    try:
+        cache_key = f"search:{search_term}"
+        cached_results = redis_client.get(cache_key)
 
-    cache_key = f"search:{search_term}"
-    cached_results = redis_client.get(cache_key)
-
-    if cached_results:
-        return jsonify(json.loads(cached_results.decode('utf-8')))
+        if cached_results:
+            return jsonify(json.loads(cached_results.decode('utf-8')))
+    except redis.exceptions.ConnectionError:
+        pass
 
     try:
         results = search_amazon_products(search_term)
-        redis_client.setex(cache_key, timedelta(hours=1), json.dumps(results))
+        try:
+            redis_client.setex(cache_key, timedelta(hours=1), json.dumps(results))
+        except redis.exceptions.ConnectionError:
+            pass
         return jsonify(results)
     except Exception as e:
         return {"error": str(e)}, 500
