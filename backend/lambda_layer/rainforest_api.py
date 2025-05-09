@@ -33,7 +33,18 @@ def search_amazon_products(search_term):
         for product in data.get("search_results", []):
             title = product['title']
             price = product.get('price', {}).get('value')
-            results.append((title, price))
+
+            # Extract image URL - handles multiple possible fields
+            image_url = (
+                product.get('image') or  # Primary image field
+                product.get('main_image', {}).get('link') or  # Nested image field
+                product.get('images', [{}])[0].get('link')  # First image in array
+            )
+            results.append({
+                'title': title,
+                'price': price,
+                'image': image_url  # Add image URL to results
+            })
         return results
     except JSONDecodeError:
             return {"error": "Invalid API response format"}, 502

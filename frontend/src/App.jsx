@@ -1,35 +1,61 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from 'react';
+import SearchBar from './Components/SearchBar/SearchBar';
+import './App.css';
 
-function App() {
-  const [count, setCount] = useState(0)
+const App = () => {
+  const [results, setResults] = useState([]);
+  const [error, setError] = useState(null);
+
+  const handleSearch = async (searchTerm) => {
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/search?search=${encodeURIComponent(searchTerm)}`
+      );
+      
+      if (!response.ok) throw new Error('Network response was not ok');
+      
+      const data = await response.json();
+      setResults(data);
+      setError(null);
+    } catch (err) {
+      setError(err.message);
+      console.error('Search error:', err);
+    }
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <div className="app-container">
+      <h1>Amazon Product Search</h1>
+      
+      <SearchBar onSearch={handleSearch} />
+      
+      {error && <div className="error-message">{error}</div>}
 
-export default App
+      <div className="results-container">
+        {results.map((product, index) => (
+          <div key={index} className="product-card">
+            {/* Product Image */}
+            {product.image && (
+              <div className="product-image-container">
+                <img 
+                  src={product.image} 
+                  alt={product.title}
+                  className="product-image"
+                  onError={(e) => {
+                    e.target.src = 'https://via.placeholder.com/300x300?text=No+Image';
+                  }}
+                />
+              </div>
+            )}
+            
+            {/* Product Info */}
+            <h3>{product.title}</h3>
+            <p>Price: {product.price ? `$${product.price}` : 'Price not available'}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default App;
