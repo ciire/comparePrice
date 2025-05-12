@@ -2,12 +2,11 @@ import requests
 import os
 from pathlib import Path
 from dotenv import load_dotenv
-from requests.exceptions import RequestException, Timeout, JSONDecodeError
+from requests.exceptions import RequestException, JSONDecodeError
 
 load_dotenv()
 
 API_KEY = os.getenv('API_RAINFOREST_KEY')
-print(f"API Key: {os.getenv('API_RAINFOREST_KEY')}")
 def search_amazon_products(search_term):
     try:
         url = 'https://api.rainforestapi.com/request'

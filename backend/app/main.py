@@ -5,8 +5,10 @@ from flask_cors import CORS
 import redis
 from datetime import timedelta
 
+# run 	sudo service redis-server start
 import redis.exceptions
 from lambda_layer.rainforest_api import search_amazon_products
+from lambda_layer.ebay_api import search_ebay_products
 app = Flask(__name__)
 # Allow CORS from frontend dev server
 CORS(app, resources={r"/api/*": {"origins": "http://localhost:5173"}})
@@ -38,12 +40,18 @@ def api_search():
         pass
 
     try:
-        results = search_amazon_products(search_term)
+       # amazon_results = search_amazon_products(search_term)
+        ebay_results = search_ebay_products(search_term)
+
+        combined_results = {
+          # 'amazon': amazon_results,
+            'ebay': ebay_results
+        }
         try:
-            redis_client.setex(cache_key, timedelta(hours=1), json.dumps(results))
+            redis_client.setex(cache_key, timedelta(hours=1), json.dumps(combined_results))
         except redis.exceptions.ConnectionError:
             pass
-        return jsonify(results)
+        return jsonify(combined_results)
     except Exception as e:
         return {"error": str(e)}, 500
 

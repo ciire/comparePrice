@@ -7,25 +7,28 @@ const App = () => {
   const [error, setError] = useState(null);
 
   const handleSearch = async (searchTerm) => {
-    try {
-      const response = await fetch(
-        `http://localhost:5000/api/search?search=${encodeURIComponent(searchTerm)}`
-      );
-      
-      if (!response.ok) throw new Error('Network response was not ok');
-      
-      const data = await response.json();
-      setResults(data);
-      setError(null);
-    } catch (err) {
-      setError(err.message);
-      console.error('Search error:', err);
-    }
-  };
+  try {
+    console.log("Searching for:", searchTerm)
+    const response = await fetch(
+      `http://localhost:5000/api/search?search=${encodeURIComponent(searchTerm)}`
+    );
+    console.log("Raw response:", response)
+    if (!response.ok) throw new Error('Network response was not ok');
+    
+    const data = await response.json();
+    console.log("Received data:", data)
+    setResults(data.ebay || []);  // Access the ebay array or fallback to empty array
+    setError(null);
+  } catch (err) {
+    setError(err.message);
+    setResults([]);
+    console.error('Search error:', err);
+  }
+};
 
   return (
     <div className="app-container">
-      <h1>Amazon Product Search</h1>
+      <h1>eBay Product Search</h1>
       
       <SearchBar onSearch={handleSearch} />
       
@@ -50,7 +53,16 @@ const App = () => {
             
             {/* Product Info */}
             <h3>{product.title}</h3>
-            <p>Price: {product.price ? `$${product.price}` : 'Price not available'}</p>
+            <p>Price: {product.price ? `$${product.price.toFixed(2)}` : 'Price not available'}</p>
+            {/* Added eBay product link */}
+            <a 
+              href={product.url} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="ebay-link"
+            >
+              View on eBay
+            </a>
           </div>
         ))}
       </div>
