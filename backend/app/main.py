@@ -6,7 +6,9 @@ import redis
 from datetime import timedelta
 from app.db.mongo_client import db
 from app.db.indexes import setup_indexes
-from app.services.user import create_user
+from app.services.user import create_user, edit_user
+from app.controllers.userController import create_user_controller, edit_user_controller
+
 
 
 # run 	sudo service redis-server start
@@ -61,33 +63,12 @@ def api_search():
     except Exception as e:
         return {"error": str(e)}, 500
 
-@app.route("/api/mongo-test")
-def mongo_test():
-    try:
-        test_collection = db["test"]
-        test_doc = {"message": "hello mongo"}
-        inserted = test_collection.insert_one(test_doc)
-        return {"status": "success", "inserted_id": str(inserted.inserted_id)}
-    except Exception as e:
-        return {"status": "error", "message": str(e)}, 500
-
 @app.route("/api/users", methods=["POST"])
 def api_create_user():
-    data = request.get_json()
+    return create_user_controller()
 
-    if not data:
-        return {"error": "Missing JSON body"}, 400
-
-    email = data.get("email")
-    password = data.get("password")
-    notification_settings = data.get("notification_settings", {})
-    tracked_items = data.get("tracked_items", [])
-
-    if not email or not password:
-        return {"error": "Email and password are required"}, 400
-
-    return create_user(email, password, notification_settings, tracked_items)
-
-
+@app.route("/api/users/<user_id>", methods=["PATCH"])
+def api_edit_user(user_id):
+    return edit_user_controller(user_id)
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
