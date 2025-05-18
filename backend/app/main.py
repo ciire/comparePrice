@@ -4,6 +4,10 @@ import os
 from flask_cors import CORS
 import redis
 from datetime import timedelta
+from app.db.mongo_client import db
+from app.db.indexes import setup_indexes
+from app.services.user import create_user
+
 
 # run 	sudo service redis-server start
 import redis.exceptions
@@ -20,6 +24,8 @@ redis_client = redis.Redis(
     password=os.getenv('REDIS_PASSWORD', None),
     db=0
 )
+
+setup_indexes()
 
 @app.route("/api/hello")
 def api_hello():
@@ -54,6 +60,34 @@ def api_search():
         return jsonify(combined_results)
     except Exception as e:
         return {"error": str(e)}, 500
+
+@app.route("/api/mongo-test")
+def mongo_test():
+    try:
+        test_collection = db["test"]
+        test_doc = {"message": "hello mongo"}
+        inserted = test_collection.insert_one(test_doc)
+        return {"status": "success", "inserted_id": str(inserted.inserted_id)}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}, 500
+
+@app.route("/api/users", methods=["POST"])
+def api_create_user():
+    data = request.get_json()
+
+    if not data:
+        return {"error": "Missing JSON body"}, 400
+
+    email = data.get("email")
+    password = data.get("password")
+    notification_settings = data.get("notification_settings", {})
+    tracked_items = data.get("tracked_items", [])
+
+    if not email or not password:
+        return {"error": "Email and password are required"}, 400
+
+    return create_user(email, password, notification_settings, tracked_items)
+
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
