@@ -1,0 +1,54 @@
+/* Add this to center the container in the viewport */
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;     /* Vertically center */
+  justify-content: center; /* Horizontally center */
+  background-color: #f0f0f0; /* Optional: background for contrast */
+}
+
+.login-container {
+  max-width: 400px;
+  width: 100%;
+  padding: 2rem;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  text-align: center;
+  background: #fafafa;
+}
+
+.login-container input {
+  display: block;
+  width: 80%;             /* Slightly narrower for better aesthetics */
+  margin: 1rem auto;      /* Center horizontally */
+  padding: 0.75rem;
+  font-size: 1rem;
+  text-align: center;     /* Center text inside the input */
+}
+
+.login-container button {
+  display: block;
+  width: 60%;
+  margin: 1rem auto;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  cursor: pointer;
+  text-align: center;
+}
+
+.signup-link {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.signup-link a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.signup-link a:hover {
+  text-decoration: underline;
+}
