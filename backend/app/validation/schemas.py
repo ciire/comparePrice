@@ -23,3 +23,18 @@ class CreateUserSchema(Schema):
     password = fields.Str(required=True)
     notification_settings = fields.Nested(NotificationSettingsSchema, required=False)
     tracked_items = fields.List(fields.Nested(TrackedItemSchema), required=False, load_default=[])
+
+# For /initiate_signup endpoint
+class InitiateSignupSchema(Schema):
+    email = fields.Email(required=True)
+    password = fields.Str(required=True, validate=validate.Length(min=6))
+
+# For /verify_email endpoint
+class VerifyEmailSchema(Schema):
+    email = fields.Email(required=True)
+    code = fields.Str(required=True, validate=validate.Length(equal=6))
+
+# For updating full user profile after signup or editing
+class UserProfileSchema(Schema):
+    notification_settings = fields.Nested(NotificationSettingsSchema, load_default=dict)
+    tracked_items = fields.List(fields.Nested(TrackedItemSchema), load_default=list)

@@ -6,8 +6,8 @@ import redis
 from datetime import timedelta
 from app.db.mongo_client import db
 from app.db.indexes import setup_indexes
-from app.services.user import create_user, edit_user
-from app.controllers.userController import create_user_controller, edit_user_controller
+from app.controllers.userController import signup_user_controller, edit_user_controller, verify_signup_code_controller
+from app.controllers.userController import send_verification_email_controller
 
 
 
@@ -63,12 +63,17 @@ def api_search():
     except Exception as e:
         return {"error": str(e)}, 500
 
-@app.route("/api/users", methods=["POST"])
+@app.route("/api/signup", methods=["POST"])
 def api_create_user():
-    return create_user_controller()
+    return signup_user_controller()
 
 @app.route("/api/users/<user_id>", methods=["PATCH"])
 def api_edit_user(user_id):
     return edit_user_controller(user_id)
+
+@app.route("/api/verifyEmail", methods=["POST"])
+def api_verify_signup():
+    return verify_signup_code_controller()
+
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
