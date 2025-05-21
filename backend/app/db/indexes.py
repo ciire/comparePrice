@@ -8,6 +8,10 @@ def setup_indexes():
     users_collection.create_index("email", unique=True)
     users_collection.create_index("trackedItems.itemId")
     pending_users_collection.create_index("email", unique=True) #did this to avoid email enumeration
+    pending_users_collection.create_index(
+        [("createdAt", 1)],
+        expireAfterSeconds=180  # 3 minutes
+)
 
     # Optional indexes (enable as needed)
     # users_collection.create_index("trackedItems.lastChecked")
