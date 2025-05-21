@@ -6,7 +6,7 @@ import redis
 from datetime import timedelta
 from app.db.mongo_client import db
 from app.db.indexes import setup_indexes
-from app.controllers.userController import signup_user_controller, edit_user_controller, verify_signup_code_controller
+from app.controllers.userController import signup_user_controller, edit_user_controller, verify_code_controller
 
 
 
@@ -82,7 +82,7 @@ def api_edit_user(user_id):
 @app.route("/api/verifyEmail", methods=["POST"])
 @limiter.limit("5 per 10 minutes")
 def api_verify_signup():
-    return verify_signup_code_controller()
+    return verify_code_controller()
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)

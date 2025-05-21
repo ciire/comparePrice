@@ -34,7 +34,7 @@ def initiate_signup(email, password, notification_settings=None, tracked_items=N
         password_hash = bcrypt.hashpw(validated_data["password"].encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
         verification_code = generate_verification_code()
-        jwt_token = create_verification_token(email, verification_code)
+        jwt_token = create_verification_token(email, verification_code, "email_verification")
 
         # Store user data temporarily in pending_users
         pending_users_collection.insert_one({
@@ -48,55 +48,83 @@ def initiate_signup(email, password, notification_settings=None, tracked_items=N
         send_verification_email(email, verification_code)
         return {"message": "Verification code sent to email", "token": jwt_token}
     except ValidationError as err:
-        return {"error": "Invalid input", "details": err.messages}
+        return {"error": "Invalid input", "details": err.messages, "status_code": 400}
     except Exception as e:
         print(f"Unexpected error during signup: {e}")
-        return {"error": "Internal server error"}, 500
+        return {"error": "Internal server error", "status_code": 500}
 
-def verify_signup_code(email, code, token):
+def verify_code(email, code, token, purpose):
     try:
-        payload = decode_verification_token(token)
+        payload = decode_verification_token(token, purpose)
         if not payload:
-            return {"error": "Invalid or expired token"}, 400
+            return {"error": "Invalid or expired token", "status_code": 400}
 
         if payload.get("email") != email or payload.get("code") != code:
-            return {"error": "Email or code mismatch"}, 400
+            return {"error": "Email or code mismatch", "status_code": 400}
+        
+        if purpose == "email_verification":
 
-        # Retrieve pending user data
-        pending_user = pending_users_collection.find_one({"email": email})
-        if not pending_user:
-            return {"error": "Verification data not found"}, 404
+            # Retrieve pending user data
+            pending_user = pending_users_collection.find_one({"email": email})
+            if not pending_user:
+                return {"error": "Verification data not found", "status_code": 404}
+            
+            user_document = {
+                "email": pending_user["email"],
+                "passwordHash": pending_user["passwordHash"],
+                "notificationSettings": pending_user.get("notificationSettings", {}),
+                "trackedItems": pending_user.get("trackedItems", [])
+            }
 
-        user_document = {
-            "email": pending_user["email"],
-            "passwordHash": pending_user["passwordHash"],
-            "notificationSettings": pending_user.get("notificationSettings", {}),
-            "trackedItems": pending_user.get("trackedItems", [])
-        }
+            # Insert into main users collection
+            result = users_collection.insert_one(user_document)
+            # Remove from pending
+            pending_users_collection.delete_one({"email": email})
 
-        # Insert into main users collection
-        result = users_collection.insert_one(user_document)
+        elif purpose == "login_verification":
+            # Login logic
+            user = users_collection.find_one({"email": email})
+            if not user:
+                return {"error": "User not found", "status_code": 404}
 
-        # Remove from pending
-        pending_users_collection.delete_one({"email": email})
+            return {"status": "success", "user_id": str(user["_id"]), "status_code": 200}
 
-        return {"status": "success", "user_id": str(result.inserted_id)}
+        return {"status": "success", "user_id": str(result.inserted_id), "status_code": 200}
     except Exception as e:
         print(f"Error verifying signup: {e}")
-        return {"error": "Internal server error"}, 500
+        return {"error": "Internal server error", "status_code": 500}
+    
+def initiate_login(email, password):
+    try:
+        user = users_collection.find_one({"email": email})
+        if not user:
+            return {"error": "Invalid email or password", "status_code": 401}
+
+        if not bcrypt.checkpw(password.encode("utf-8"), user["passwordHash"].encode("utf-8")):
+            return {"error": "Invalid email or password", "status_code": 401}
+
+        verification_code = generate_verification_code()
+        jwt_token = create_verification_token(email, verification_code, "login_verification")
+        send_verification_email(email, verification_code)
+
+        return {"message": "Verification code sent to email", "token": jwt_token, "user_id": str(user["_id"])}
+    except Exception as e:
+        print(f"Login error: {e}")
+        return {"error": "Internal server error", "status_code": 500}
+
     
 def edit_user(user_id, update_data):
     try:
         user_object_id = ObjectId(user_id)
     except (InvalidId, TypeError):
-        return {"error": "Invalid user ID format"}, 400
+        return {"error": "Invalid user ID format", "status_code": 400}
 
     try:
         # Only validate provided fields
         partial_schema = CreateUserSchema(partial=True)
         validated_data = partial_schema.load(update_data)
     except ValidationError as err:
-        return {"error": "Invalid input", "details": err.messages}, 400
+        return {"error": "Invalid input", "details": err.messages, "status_code": 400}
 
     update_fields = {}
 
@@ -116,7 +144,7 @@ def edit_user(user_id, update_data):
         update_fields["trackedItems"] = validated_data["tracked_items"]
 
     if not update_fields:
-        return {"error": "No valid fields to update"}, 400
+        return {"error": "No valid fields to update", "status_code": 400}
     try:
         result = users_collection.update_one(
             {"_id": user_object_id},
@@ -126,7 +154,7 @@ def edit_user(user_id, update_data):
         if result.matched_count == 0:
             return {"error": "User not found"}, 404
 
-        return {"status": "success", "modified_count": result.modified_count}, 200
+        return {"status": "success", "modified_count": result.modified_count, "status_code": 200}
     except Exception as e:
         print(f"Failed to update user {user_id}: {e}")
-        return {"error": "Internal server error"}, 500
+        return {"error": "Internal server error", "status_code": 500}
