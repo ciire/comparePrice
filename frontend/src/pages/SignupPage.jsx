@@ -1,11 +1,17 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Signup from '../Features/Signup/Signup'; // Create this form
+import Signup from '../Features/Signup/Signup';
+import VerifyCode from '../Features/VerifyCode/VerifyCode';
 
 const SignupPage = () => {
   const navigate = useNavigate();
+  const [step, setStep] = useState('form'); // 'form' or 'verify'
+  const [email, setEmail] = useState('');
+  const [token, setToken] = useState('');
+  const [message, setMessage] = useState('');
 
-  const handleSignup = async (email, password) => {
-    if (!email || !password) {
+  const handleSignup = async (emailInput, password) => {
+    if (!emailInput || !password) {
       alert('Please enter email and password.');
       return;
     }
@@ -14,7 +20,7 @@ const SignupPage = () => {
       const response = await fetch('http://localhost:5000/api/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email: emailInput, password }),
       });
 
       const data = await response.json();
@@ -24,15 +30,36 @@ const SignupPage = () => {
         return;
       }
 
-      alert('Signup successful! You can now log in.');
-      navigate('/'); 
+      setEmail(emailInput);
+      setToken(data.token);
+      setMessage('Verification code sent to your email.');
+      setStep('verify');
     } catch (error) {
       console.error('Signup error:', error);
       alert('An error occurred during signup.');
     }
   };
 
-  return <Signup onSubmit={handleSignup} />;
+  const handleVerifySuccess = () => {
+    alert('Signup complete and email verified!');
+    navigate('/');
+  };
+
+  return (
+    <>
+      {step === 'form' ? (
+        <Signup onSignup={handleSignup} />
+      ) : (
+        <VerifyCode
+          email={email}
+          token={token}
+          message={message}
+          purpose="email_verification"
+          onVerify={handleVerifySuccess}
+        />
+      )}
+    </>
+  );
 };
 
 export default SignupPage;

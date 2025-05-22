@@ -1,0 +1,16 @@
+.verify-container {
+  max-width: 400px;
+  margin: auto;
+  padding: 1rem;
+  text-align: center;
+}
+
+.verify-container input {
+  width: 100%;
+  padding: 0.5rem;
+  margin: 1rem 0;
+}
+
+.verify-container button {
+  padding: 0.5rem 1rem;
+}

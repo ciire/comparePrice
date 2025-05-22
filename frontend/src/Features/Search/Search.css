@@ -1,0 +1,46 @@
+/* src/Components/Search/Search.css */
+.search-container {
+  text-align: center;
+  padding: 2rem;
+}
+
+form {
+  margin-bottom: 2rem;
+}
+
+input {
+  padding: 0.5rem;
+  width: 250px;
+  font-size: 1rem;
+}
+
+button {
+  padding: 0.5rem 1rem;
+  margin-left: 0.5rem;
+  font-size: 1rem;
+}
+
+.error {
+  color: red;
+}
+
+.results {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.result-card {
+  width: 200px;
+  padding: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fff;
+  text-align: center;
+}
+
+.result-card img {
+  max-width: 100%;
+  height: auto;
+}
