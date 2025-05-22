@@ -6,7 +6,7 @@ import redis
 from datetime import timedelta
 from app.db.mongo_client import db
 from app.db.indexes import setup_indexes
-from app.controllers.userController import signup_user_controller, edit_user_controller, verify_code_controller
+from app.controllers.userController import signup_user_controller, edit_user_controller, verify_code_controller, login_user_controller
 
 
 
@@ -70,19 +70,24 @@ def api_search():
         return {"error": str(e)}, 500
 
 @app.route("/api/signup", methods=["POST"])
-@limiter.limit("5 per 10 minutes")
+# @limiter.limit("5 per 10 minutes")
 def api_create_user():
     return signup_user_controller()
 
 @app.route("/api/users/<user_id>", methods=["PATCH"])
-@limiter.limit("10 per hour")
+# @limiter.limit("10 per hour")
 def api_edit_user(user_id):
     return edit_user_controller(user_id)
 
 @app.route("/api/verifyEmail", methods=["POST"])
-@limiter.limit("5 per 10 minutes")
+# @limiter.limit("5 per 10 minutes")
 def api_verify_signup():
     return verify_code_controller()
+
+@app.route("/api/login", methods=["POST"])
+# @limiter.limit("5 per 10 minutes") 
+def api_login_user():
+    return login_user_controller()
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)

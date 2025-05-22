@@ -1,5 +1,5 @@
 from flask import request, jsonify
-from app.services.user import initiate_signup, edit_user, verify_code
+from app.services.user import initiate_signup, edit_user, verify_code, initiate_login
 
 def handle_service_response(result, default_status_code=200):
     if isinstance(result, tuple) and len(result) == 2:
@@ -56,7 +56,26 @@ def verify_code_controller():
     except Exception as e:
         print(f"Unexpected error in verify_code_controller: {e}")
         return jsonify({"error": "Internal server error"}), 500
+    
 
+def login_user_controller():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "Missing JSON body"}), 400
+
+        email = data.get("email")
+        password = data.get("password")
+
+        if not email or not password:
+            return jsonify({"error": "Email and password are required"}), 400
+
+        result = initiate_login(email, password)
+        return handle_service_response(result)
+
+    except Exception as e:
+        print(f"Unexpected error during login: {e}")
+        return jsonify({"error": "Internal server error"}), 500
 
 def edit_user_controller(user_id):
     try:
